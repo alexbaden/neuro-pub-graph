@@ -28,31 +28,31 @@ def get_paper_authors(author_raw):
   
   author_json = json.loads(author_raw)
   author_ids = author_json['esearchresult']['idlist']
-  idlist = ','.join(author_ids) 
-  
-  url = 'eutils.ncbi.nlm.nih.gov'
-  params = urlencode({'db':'pubmed','retmode':'json','rettype':'abstract','id':idlist})
-  headers = {"Content-type": "application/x-www-form-urlencoded",
-      "Accept": "text/plain"}
-  try:
-    conn = httplib.HTTPConnection(url)
-    conn.request("POST", "/entrez/eutils/esummary.fcgi", params, headers)
-    response = conn.getresponse()
-    abstracts_raw = response.read()
-  except httplib.HTTPException, e:
-    print "Received error code", e
 
-  print abstracts_raw
-  abstracts = json.loads(abstracts_raw)
-  #print abstracts 
-  if 'result' in abstracts:
-    for abstract in abstracts['result']:
-      if abstract != 'uids':
-        papers[abstract] = abstracts['result'][abstract]['authors']
+  for i in xrange(0,len(author_ids),100):
+    start = i
+    end = (i + 99) 
+    if end > len(author_ids): 
+      end = len(author_ids)
+    idlist = ','.join(author_ids[start:end]) 
   
-    return papers
-  else:
-    return None 
+    url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&rettype=abstract&id={}".format(idlist)
+  
+    request = Request(url)
+      
+    try:
+      response = urlopen(request)
+      abstracts_raw = response.read()
+    except URLError, e:
+      print "Received error code", e
+    
+    abstracts = json.loads(abstracts_raw)
+    if 'result' in abstracts:
+      for abstract in abstracts['result']:
+        if abstract != 'uids':
+          papers[abstract] = abstracts['result'][abstract]['authors']
+  
+  return papers
 
 def main():
   # authors[name] = papers (papers is a dict of id => authors on paper)
@@ -63,12 +63,12 @@ def main():
       authors[line.strip()] = None
 
   for author in sorted(authors.keys()):
+    print "Processing ", author
     paperstmp = get_author_pubs(author) 
     print paperstmp 
     authors[author] = get_paper_authors(paperstmp)
-    time.sleep(5)
 
-  with open('pubmed.pickle') as f:
+  with open('pubmed.pickle', 'w') as f:
     pickle.dump(authors, f)
 
 if __name__ == '__main__':
