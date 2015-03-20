@@ -1,3 +1,7 @@
+# Download Publication Data from Pubmed
+# Alex Baden - Copyright 2015
+# 20150320
+
 from urllib2 import Request, urlopen, quote, URLError
 from urllib import urlencode
 import httplib 

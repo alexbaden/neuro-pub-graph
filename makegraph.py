@@ -1,3 +1,8 @@
+# Create a graph from publication data by adding an edge between two co-authors on 
+# a paper.
+# Alex Baden - Copyright 2015
+# 20150320 
+
 import pickle
 import igraph
 import sys
