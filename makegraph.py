@@ -19,6 +19,16 @@ def check_name(author_names, name, cur_author):
 
   return None 
 
+def check_paper(paper_id, authors, cur_author):
+  for author in sorted(authors.keys()):
+    if author == cur_author:
+      continue 
+    for paper in authors[author]:
+      if int(paper) == int(paper_id):
+        return author
+
+  return None 
+
 def process_author_list(authors):
   author_names = {}
   authors_processed = {}
@@ -32,11 +42,9 @@ def process_author_list(authors):
 
   for author in sorted(authors.keys()):
     for paper in authors[author]:
-      for listedauth in authors[author][paper]:
-        if listedauth['authtype'] == 'Author':
-          result = check_name(author_names, listedauth['name'], author)
-          if result is not None:
-            authors_processed[author].append(result)
+      result = check_paper(paper, authors, author)
+      if result is not None:
+        authors_processed[author].append(result)
   
   return authors_processed
 
