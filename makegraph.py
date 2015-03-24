@@ -42,7 +42,13 @@ def process_author_list(authors):
   for author in sorted(authors.keys()):
     print "Processing " + author
     for paper in authors[author]:
-      check_paper(paper, authors, author, authors_processed)
+      for listedauth in authors[author][paper]:
+        if listedauth['authtype'] == 'Author':
+          result = check_name(author_names, listedauth['name'], author)
+          if result is not None:
+            authors_processed[author].append(result)
+
+      #check_paper(paper, authors, author, authors_processed)
   
   return authors_processed
 
