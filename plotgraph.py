@@ -31,11 +31,11 @@ from numpy import ceil, zeros, asarray, eye, array, sqrt, transpose, log
 def compute_clusters(graph):
   lap_data = csgraph.laplacian(asarray(graph.get_adjacency(attribute="weight").data), normed=False)
   lap_cov = covariate_laplacian(graph, 'department')
-  lap_total = 1*lap_data + 15*lap_cov + 5*eye(len(graph.vs))
+  lap_total = 1*lap_data + 1000*lap_cov + 10*eye(len(graph.vs)) + 1
 
   [evals, evecs] = eig(lap_total)
   
-  coords =  array((evecs[-3]/sqrt(evals[-3]), evecs[-2]/sqrt(evals[-2])))
+  coords = array((log(evecs[3]/sqrt(evals[2])), log(evecs[1]/sqrt(evals[1]))))
   coords = transpose(abs(coords))
   return coords
 
@@ -67,13 +67,17 @@ def main():
   result = parser.parse_args()
 
   graph = Graph.Read_GraphML(result.graph)
+  #for i in graph.vs:
+  # if i.degree() is 0:
+  #	print i.degree()
+  #	i.delete()
   cluster_locs = compute_clusters(graph)
   set_colors(graph)
 
-  print graph.es["weight"]
+  #import pdb ; pdb.set_trace()
   graph.vs["label"] = graph.vs["name"]
   lays = Layout(tuple(map(tuple,cluster_locs)))
-  plot(graph, target='/Users/gkiar/git/neuro-pub-graph/temp.png', layout=lays, edge_width=log(graph.es["weight"]))
+  plot(graph, target='/Users/gkiar/git/neuro-pub-graph/temp.png', layout=graph.layout("kamada_kawai"), edge_width=log(graph.es["weight"]))
   #import pdb ; pdb.set_trace()
 
 if __name__=='__main__':
