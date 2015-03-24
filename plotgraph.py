@@ -26,17 +26,18 @@ from argparse import ArgumentParser
 from igraph import Graph, Layout, plot
 from scipy.sparse import csgraph
 from scipy.linalg import eig
-from numpy import ceil, zeros, asarray, eye, array, sqrt, transpose
+from numpy import ceil, zeros, asarray, eye, array, sqrt, transpose, log
 
 def compute_clusters(graph):
-  lap_data = csgraph.laplacian(asarray(graph.get_adjacency(attribute="weight").data), normed=True)
+  lap_data = csgraph.laplacian(asarray(graph.get_adjacency(attribute="weight").data), normed=False)
   lap_cov = covariate_laplacian(graph, 'department')
-  lap_total = lap_data + 1000*lap_cov + eye(len(graph.vs))
+  lap_total = 1*lap_data + 15*lap_cov + 5*eye(len(graph.vs))
 
   [evals, evecs] = eig(lap_total)
   
-  coords =  array((evecs[0]/sqrt(evals[0]), evecs[1]/sqrt(evals[1])))
+  coords =  array((evecs[-3]/sqrt(evals[-3]), evecs[-2]/sqrt(evals[-2])))
   coords = transpose(abs(coords))
+  return coords
 
 def set_colors(graph):
   for i in range(0, len(graph.vs)):
@@ -69,8 +70,10 @@ def main():
   cluster_locs = compute_clusters(graph)
   set_colors(graph)
 
+  print graph.es["weight"]
+  graph.vs["label"] = graph.vs["name"]
   lays = Layout(tuple(map(tuple,cluster_locs)))
-  plot(graph, target='/Users/gkiar/git/neuro-pub-graph/temp.png', layout=lays)
+  plot(graph, target='/Users/gkiar/git/neuro-pub-graph/temp.png', layout=lays, edge_width=log(graph.es["weight"]))
   #import pdb ; pdb.set_trace()
 
 if __name__=='__main__':
