@@ -13,7 +13,8 @@ import sys
 def get_author_pubs(author):
   #author_text = author.split(' ')
   #author_string = "{}, {}[Author]".format(author_text[1].strip(), author_text[0].strip())
-  author_string = "{}[Author]".format(author) #.strip(), author_text[0].strip())
+  #author_string = "{}[Author]".format(author) #.strip(), author_text[0].strip())
+  author_string = "{}".format(author) #.strip(), author_text[0].strip())
   author_term = quote(author_string)
   url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=1000&term={}".format(author_term)
 
@@ -24,19 +25,56 @@ def get_author_pubs(author):
     papers = response.read()
   except URLError, e:
     print "Received error code in get pubs", e
-
+  
+  tmp = json.loads(papers)
+  print tmp['esearchresult']['count']
   return papers
 
-def get_paper_authors(author_raw):
+def get_paper_authors_post(author_raw):
   # papers[id] = authors 
   papers = {}
   
   author_json = json.loads(author_raw)
   author_ids = author_json['esearchresult']['idlist']
   print "Getting " + str(len(author_ids)) + " papers"
-  for i in xrange(0,len(author_ids),15):
+  for i in xrange(0,len(author_ids),25):
     start = i
-    end = (i + 14) 
+    end = (i + 24) 
+    if end > len(author_ids): 
+      end = len(author_ids)
+    print "start: " + str(start) + ", end: " + str(end)
+    idlist = ','.join(author_ids[start:end]) 
+    
+    url = 'eutils.ncbi.nlm.nih.gov'
+    params = urlencode({'db':'pubmed','retmode':'json','rettype':'abstract','id':idlist})
+    headers = {"Content-type":"application/x-www-form-urlencoded",
+        "Accept":"text/plain"}
+    try:
+      conn = httplib.HTTPConnection(url)
+      conn.request("POST", "/entrez/eutils/esummary.fcgi", params, headers)
+      response = conn.getresponse()
+      abstracts_raw = response.read()
+    except httplib.HTTPException, e:
+      print "Received error code in get papers", e
+    
+    abstracts = json.loads(abstracts_raw)
+    if 'result' in abstracts:
+      for abstract in abstracts['result']:
+        if abstract != 'uids':
+          papers[abstract] = abstracts['result'][abstract]['authors']
+  
+  return papers
+
+def get_paper_authors_get(author_raw):
+  # papers[id] = authors 
+  papers = {}
+  
+  author_json = json.loads(author_raw)
+  author_ids = author_json['esearchresult']['idlist']
+  print "Getting " + str(len(author_ids)) + " papers"
+  for i in xrange(0,len(author_ids),50):
+    start = i
+    end = (i + 49) 
     if end > len(author_ids): 
       end = len(author_ids)
     print "start: " + str(start) + ", end: " + str(end)
@@ -75,8 +113,7 @@ def main():
   for author in sorted(authors.keys()):
     print "Processing ", author
     paperstmp = get_author_pubs(authors[author]) 
-    authors[author] = get_paper_authors(paperstmp)
-    time.sleep(5)
+    authors[author] = get_paper_authors_post(paperstmp)
 
   with open('pubmed.pickle', 'w') as f:
     pickle.dump([authors, departments], f)
