@@ -19,16 +19,14 @@ def check_name(author_names, name, cur_author):
 
   return None 
 
-def check_paper(paper_id, authors, cur_author):
+def check_paper(paper_id, authors, cur_author, authors_processed):
   for author in sorted(authors.keys()):
     if author == cur_author:
       continue 
     else:
       for paper in authors[author]:
         if int(paper) == int(paper_id):
-          return author
-
-  return None 
+          authors_processed[cur_author].append(author) 
 
 def process_author_list(authors):
   author_names = {}
@@ -42,10 +40,9 @@ def process_author_list(authors):
     authors_processed[author] = []
 
   for author in sorted(authors.keys()):
+    print "Processing " + author
     for paper in authors[author]:
-      result = check_paper(paper, authors, author)
-      if result is not None:
-        authors_processed[author].append(result)
+      check_paper(paper, authors, author, authors_processed)
   
   return authors_processed
 
@@ -57,6 +54,7 @@ def main():
   departments_raw = data_raw[1]
 
   authors = process_author_list(authors_raw)
+
   g = igraph.Graph(directed=False)
   g["name"] = "JHU Neuroscience Graph"
   # add vertices
@@ -67,14 +65,12 @@ def main():
   for author in authors.keys():
     for coauthor in authors[author]:
       g.add_edge(author, coauthor, weight=1)
-  """
   # collapse all edges, adding weights
   print "BEFORE:"
   print g.get_adjlist()
   g.simplify(combine_edges=dict(weight=sum))
   print "AFTER:"
   print g.get_adjlist()
-  """
   g.write_graphml('graph_output.graphml')
   
 if __name__ == '__main__':
