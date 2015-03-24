@@ -23,9 +23,10 @@ def check_paper(paper_id, authors, cur_author):
   for author in sorted(authors.keys()):
     if author == cur_author:
       continue 
-    for paper in authors[author]:
-      if int(paper) == int(paper_id):
-        return author
+    else:
+      for paper in authors[author]:
+        if int(paper) == int(paper_id):
+          return author
 
   return None 
 
@@ -50,27 +51,30 @@ def process_author_list(authors):
 
 def main():
   with open('pubmed.pickle', 'r') as f:
-    authors_raw = pickle.load(f)
+    data_raw = pickle.load(f)
 
+  authors_raw = data_raw[0]
+  departments_raw = data_raw[1]
 
   authors = process_author_list(authors_raw)
   g = igraph.Graph(directed=False)
   g["name"] = "JHU Neuroscience Graph"
   # add vertices
   for author in authors.keys():
-    g.add_vertex(name=author)
+    g.add_vertex(name=author, department=departments_raw[author])
  
   # add edges 
   for author in authors.keys():
     for coauthor in authors[author]:
       g.add_edge(author, coauthor, weight=1)
- 
+  """
   # collapse all edges, adding weights
   print "BEFORE:"
   print g.get_adjlist()
   g.simplify(combine_edges=dict(weight=sum))
   print "AFTER:"
   print g.get_adjlist()
+  """
   g.write_graphml('graph_output.graphml')
   
 if __name__ == '__main__':
