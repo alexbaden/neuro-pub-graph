@@ -71,6 +71,16 @@ def main():
   for author in authors.keys():
     for coauthor in authors[author]:
       g.add_edge(author, coauthor, weight=1)
+  # add a few manual edges like i2g etc.
+  i2g = ('Joshua Vogelstein', 'Randal Burns', 'Carey Priebe', 'Mark A. Chevillet','Gregory Hager')
+  for p1 in i2g:
+    for p2 in i2g:
+      if p2 is not p1:
+        g.add_edge(p1, p2, weight=1)
+  g.add_edge("Dan Naiman","Carey Priebe",weight=2)
+  g.add_edge("Joshua Vogelstein","Carey Priebe",weight=4)
+  g.add_edge("Andreas Andreou","Carey Priebe",weight=2)
+
   # collapse all edges, adding weights
   print "BEFORE:"
   print g.get_adjlist()

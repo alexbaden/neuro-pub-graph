@@ -31,11 +31,11 @@ from numpy import ceil, zeros, asarray, eye, array, sqrt, transpose, log
 def compute_clusters(graph):
   lap_data = csgraph.laplacian(asarray(graph.get_adjacency(attribute="weight").data), normed=False)
   lap_cov = covariate_laplacian(graph, 'department')
-  lap_total = 1*lap_data + 1000*lap_cov + 10*eye(len(graph.vs)) + 1
+  lap_total = 1*lap_data + 10000000000*lap_cov + 1000*eye(len(graph.vs)) + 1000000
 
   [evals, evecs] = eig(lap_total)
   
-  coords = array((log(evecs[3]/sqrt(evals[2])), log(evecs[1]/sqrt(evals[1]))))
+  coords = array((log(evecs[2]/sqrt(evals[2])), log(evecs[1]/sqrt(evals[1]))))
   coords = transpose(abs(coords))
   return coords
 
@@ -78,7 +78,7 @@ def main():
   graph.vs["label"] = graph.vs["name"]
   lays = Layout(tuple(map(tuple,cluster_locs)))
   plot(graph, target='/Users/gkiar/git/neuro-pub-graph/temp.png', layout=graph.layout("kamada_kawai"), edge_width=log(graph.es["weight"]))
-  #import pdb ; pdb.set_trace()
+  #import pdb ; pdb.set_trace() #graph.layout("kamada_kawai")
 
 if __name__=='__main__':
   main()
